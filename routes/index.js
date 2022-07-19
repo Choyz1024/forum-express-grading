@@ -43,7 +43,7 @@ router.delete('/like/:restaurantId', authenticated, userController.removeLike)
 router.get('/users/top', authenticated, userController.getTopUsers)
 router.get('/users/:id/edit', authenticatedSelf, userController.editUser)
 router.get('/users/:id', authenticated, userController.getUser)
-router.put('/users/:id', upload.single('image'), userController.putUser)
+router.put('/users/:id', upload.single('image'), authenticatedSelf, userController.putUser)
 
 router.post('/following/:userId', authenticated, userController.addFollowing)
 router.delete('/following/:userId', authenticated, userController.removeFollowing)

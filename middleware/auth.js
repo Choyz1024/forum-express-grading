@@ -21,7 +21,7 @@ const authenticatedSelf = (req, res, next) => {
     if (helpers.getUser(req).id === Number(req.params.id)) {
       return next()
     }
-    throw new Error('Invalidate access')
+    throw new Error('Invalid access')
   }
 }
 
