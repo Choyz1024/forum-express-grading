@@ -48,14 +48,14 @@ const userController = {
       const userSelf = req.user
       const user = await User.findByPk(req.params.id, { raw: true })
       if (!user) throw new Error("User didn't exist!")
-      const comments = await Comment.findAndCountAll({
+      const comments = await Comment.findAll({
         include: Restaurant,
         where: { userId: req.params.id },
         raw: true,
         nest: true
       })
-      const filteredComments = comments.rows.filter((comment, index) => {
-        return index === comments.rows.findIndex(x => x.restaurantId === comment.restaurantId)
+      const filteredComments = comments.filter((comment, index) => {
+        return index === comments.findIndex(x => x.restaurantId === comment.restaurantId)
       })
       res.render('users/profile', { user, userSelf, filteredComments })
     } catch (err) {
@@ -100,7 +100,6 @@ const userController = {
       .then(([restaurant, favorite]) => {
         if (!restaurant) throw new Error("Restaurant didn't exist!")
         if (favorite) throw new Error('You have favorited this restaurant!')
-        restaurant.increment('favoriteCounts')
         return Favorite.create({
           userId: req.user.id,
           restaurantId
@@ -121,7 +120,6 @@ const userController = {
     ])
       .then(([favorite, restaurant]) => {
         if (!favorite) throw new Error("You haven't favorited this restaurant")
-        restaurant.decrement('favoriteCounts')
         return favorite.destroy()
       })
       .then(() => res.redirect('back'))
