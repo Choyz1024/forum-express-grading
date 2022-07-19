@@ -98,8 +98,8 @@ const restaurantController = {
       .catch(err => next(err))
   },
   getTopRestaurants: (req, res, next) => {
+    const topLimit = 10
     return Restaurant.findAll({
-      limit: 10,
       include: [{ model: User, as: 'FavoritedUsers' }]
     })
       .then(restaurants => {
@@ -110,6 +110,7 @@ const restaurantController = {
             isFavorited: restaurant.FavoritedUsers.some(fu => fu.id === req.user.id)
           }))
           .sort((a, b) => b.favoritedCount - a.favoritedCount)
+          .slice(0, topLimit)
         res.render('top-restaurants', { restaurants: result })
       })
       .catch(err => next(err))
