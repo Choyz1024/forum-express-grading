@@ -8,7 +8,6 @@ const commentController = {
       .then(([user, restaurant]) => {
         if (!user) throw new Error("User didn't exist!")
         if (!restaurant) throw new Error("Restaurant didn't exist!")
-        restaurant.increment('commentCounts')
         return Comment.create({
           text,
           restaurantId,
@@ -25,11 +24,8 @@ const commentController = {
       const { restaurantId } = req.body
       const comment = await Comment.findByPk(req.params.id)
       const restaurant = await Restaurant.findByPk(restaurantId)
-
       if (!comment) throw new Error("Comment didn't exist!")
       if (!restaurant) throw new Error("Restaurant didn't exist!")
-
-      await restaurant.decrement('commentCounts')
       await comment.destroy()
       return res.redirect(`/restaurants/${restaurantId}`)
     } catch (error) {
