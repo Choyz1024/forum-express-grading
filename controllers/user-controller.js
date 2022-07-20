@@ -61,7 +61,6 @@ const userController = {
       const filteredComments = comments.filter((comment, index) => {
         return index === comments.findIndex(x => x.restaurantId === comment.restaurantId)
       })
-      console.log(comments)
       res.render('users/profile', { user, userSelf, filteredComments })
     } catch (err) {
       next(err)
