@@ -1,28 +1,10 @@
 const { Restaurant, User, Category } = require('../../models')
 const { imgurFileHandler } = require('../../helpers/file-helpers')
-const { getOffset, getPagination } = require('../../helpers/pagination-helper')
+const adminServices = require('../../services/admin-services')
 
 const adminController = {
   getRestaurants: (req, res, next) => {
-    const DEFAULT_LIMIT = 10
-    const page = Number(req.query.page) || 1
-    const limit = Number(req.query.limit) || DEFAULT_LIMIT
-    const offset = getOffset(limit, page)
-    return Restaurant.findAndCountAll({
-      limit,
-      offset,
-      raw: true,
-      nest: true,
-      include: [Category]
-    })
-      .then(restaurants => {
-        const data = restaurants.rows
-        res.render('admin/restaurants', {
-          restaurants: data,
-          pagination: getPagination(limit, page, restaurants.count)
-        })
-      })
-      .catch(err => next(err))
+    adminServices.getRestaurants(req, (err, data) => (err ? next(err) : res.render('admin/restaurants', data)))
   },
   createRestaurant: (req, res, next) => {
     return Category.findAll({
@@ -32,26 +14,13 @@ const adminController = {
       .catch(err => next(err))
   },
   postRestaurant: (req, res, next) => {
-    const { name, tel, address, openingHours, description, categoryId } = req.body
-    if (!name) throw new Error('Restaurant name is required!')
-    const { file } = req // 把檔案取出來，也可以寫成 const file = req.file
-    imgurFileHandler(file) // 把取出的檔案傳給 file-helper 處理後
-      .then(filePath =>
-        Restaurant.create({
-          name,
-          tel,
-          address,
-          openingHours,
-          description,
-          image: filePath || null,
-          categoryId
-        })
-      )
-      .then(() => {
-        req.flash('success_messages', 'restaurant was successfully created')
-        res.redirect('/admin/restaurants')
-      })
-      .catch(err => next(err))
+    adminServices.postRestaurant(req, (err, data) => {
+      if (err) return next(err)
+      req.flash('success_messages', 'restaurant was successfully created')
+      // res.redirect('/admin/restaurants', data)
+      // 跟delete一樣先拿掉data
+      res.redirect('/admin/restaurants')
+    })
   },
   getRestaurant: (req, res, next) => {
     Restaurant.findByPk(req.params.id, {
@@ -103,16 +72,13 @@ const adminController = {
       .catch(err => next(err))
   },
   deleteRestaurant: (req, res, next) => {
-    return (
-      Restaurant.findByPk(req.params.id)
-        // 一樣不需要 { raw: true }
-        .then(restaurant => {
-          if (!restaurant) throw new Error("Restaurant didn't exist!")
-          return restaurant.destroy()
-        })
-        .then(() => res.redirect('/admin/restaurants'))
-        .catch(err => next(err))
-    )
+    // adminServices.deleteRestaurant(req, (err, data) => (err ? next(err) : res.redirect('/admin/restaurants', data)))
+    // express redirect 2.0版本是 res.redirect(url[, status])
+    // 3.0版本以後已經改成 res.redirect([status,] path)
+    // 但這個狀況是沒有 status 卻想要包含第三個參數 data ?
+    // 因為講師想要留給前端如果想要顯示被刪除的data的話可以使用
+    // 但前端使用的應該是API? 所以其實不需要第三個參數?
+    adminServices.deleteRestaurant(req, err => (err ? next(err) : res.redirect('/admin/restaurants')))
   },
   getUsers: (req, res, next) => {
     return User.findAll({
